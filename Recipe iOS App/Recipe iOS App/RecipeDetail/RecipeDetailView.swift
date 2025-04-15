@@ -20,5 +20,5 @@ struct RecipeDetailView: View {
 }
 
 #Preview {
-    RecipeDetailView(vm: RecipeDetailViewModel(recipe: Recipe()))
+    RecipeDetailView(vm: RecipeDetailViewModel(recipe: fakeRecipe))
 }
