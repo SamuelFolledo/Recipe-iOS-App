@@ -26,13 +26,11 @@ class ImageCache {
         if let cached = memoryCache.object(forKey: key as NSString) {
             return cached
         }
-
         // Disk cache check
         if let diskImage = loadFromDisk(key: key) {
             memoryCache.setObject(diskImage, forKey: key as NSString)
             return diskImage
         }
-
         // Network fetch
         do {
             let (data, _) = try await URLSession.shared.data(from: remoteURL)
@@ -47,13 +45,21 @@ class ImageCache {
         }
     }
 
-    private func loadFromDisk(key: String) -> UIImage? {
+    func clearCache(for key: String) {
+        memoryCache.removeObject(forKey: key as NSString)
+        let fileURL = cacheDirectory.appendingPathComponent(key)
+        try? fileManager.removeItem(at: fileURL)
+    }
+}
+
+private extension ImageCache {
+    func loadFromDisk(key: String) -> UIImage? {
         let fileURL = cacheDirectory.appendingPathComponent(key)
         guard let data = try? Data(contentsOf: fileURL) else { return nil }
         return UIImage(data: data)
     }
 
-    private func saveToDisk(image: UIImage, key: String) {
+    func saveToDisk(image: UIImage, key: String) {
         let fileURL = cacheDirectory.appendingPathComponent(key)
         DispatchQueue.global(qos: .utility).async {
             if let data = image.pngData() {
@@ -62,15 +68,9 @@ class ImageCache {
         }
     }
 
-    private func createCacheDirectory() {
+    func createCacheDirectory() {
         guard !fileManager.fileExists(atPath: cacheDirectory.path) else { return }
         try? fileManager.createDirectory(at: cacheDirectory,
                                          withIntermediateDirectories: true)
-    }
-
-    func clearCache(for key: String) {
-        memoryCache.removeObject(forKey: key as NSString)
-        let fileURL = cacheDirectory.appendingPathComponent(key)
-        try? fileManager.removeItem(at: fileURL)
     }
 }

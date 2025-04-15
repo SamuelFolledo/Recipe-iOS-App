@@ -15,6 +15,7 @@ protocol CacheManagerProtocol {
 
 final class CacheManager: CacheManagerProtocol {
     static let shared = CacheManager()
+    private init() {}
 
     private let recipeCache = DataCache<[Recipe]>(filename: "recipes_cache.json")
     private let imageCache = ImageCache.shared
@@ -34,7 +35,7 @@ extension CacheManager {
 //MARK: - Image Caching Methods
 extension CacheManager {
     func clearImageCache(for recipeID: UUID) {
-        ImageCache.shared.clearCache(for: recipeID.uuidString)
+        imageCache.clearCache(for: recipeID.uuidString)
     }
 
     func image(for recipe: Recipe, size: ImageSize) async -> UIImage? {
