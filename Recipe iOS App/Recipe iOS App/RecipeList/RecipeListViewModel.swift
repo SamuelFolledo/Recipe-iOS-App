@@ -5,34 +5,28 @@
 //  Created by Samuel Folledo on 4/14/25.
 //
 
-import Foundation
-
 import SwiftUI
 
 @MainActor
 final class RecipeListViewModel: ObservableObject {
-    // MARK: - Published Properties
     @Published private(set) var recipes: [Recipe] = []
     @Published private(set) var isLoading = false
     @Published private(set) var error: RecipeError?
 
-    // MARK: - Dependencies
-    private let service: RecipeServiceProtocol
+    private let recipeService: RecipeServiceProtocol
     private let cacheManager: CacheManagerProtocol
 
-    // MARK: - Initialization
-    init(service: RecipeServiceProtocol = RecipeService(), cacheManager: CacheManagerProtocol = CacheManager.shared) {
-        self.service = service
+    init(recipeService: RecipeServiceProtocol = RecipeService(), cacheManager: CacheManagerProtocol = CacheManager.shared) {
+        self.recipeService = recipeService
         self.cacheManager = cacheManager
     }
 
-    // MARK: - Public Methods
     func loadRecipes() async {
         error = nil
         isLoading = true
         do {
             await loadCachedRecipes()
-            let newRecipes = try await service.fetchRecipes()
+            let newRecipes = try await recipeService.fetchRecipes()
             let mergedRecipes = await mergeRecipes(newRecipes)
             recipes = mergedRecipes
             await cacheManager.cacheRecipes(mergedRecipes)
@@ -43,29 +37,24 @@ final class RecipeListViewModel: ObservableObject {
         }
         isLoading = false
     }
+}
 
-    // MARK: - Cache Management
-    private func loadCachedRecipes() async {
-        let cachedRecipes = await cacheManager.loadCachedRecipes()
-        if !cachedRecipes.isEmpty {
-            recipes = cachedRecipes
+private extension RecipeListViewModel {
+    func loadCachedRecipes() async {
+        let cached = await cacheManager.loadCachedRecipes()
+        if !cached.isEmpty {
+            recipes = cached
         }
     }
 
-    private func mergeRecipes(_ newRecipes: [Recipe]) async -> [Recipe] {
-        let cachedRecipes = await cacheManager.loadCachedRecipes()
-        return merge(newRecipes: newRecipes, with: cachedRecipes)
-    }
-
-    private func merge(newRecipes: [Recipe], with existing: [Recipe]) -> [Recipe] {
-        var merged = existing
+    func mergeRecipes(_ newRecipes: [Recipe]) async -> [Recipe] {
+        var merged = recipes
         for recipe in newRecipes {
             if let index = merged.firstIndex(where: { $0.id == recipe.id }) {
-                // Update existing recipe and check for image changes
                 let oldRecipe = merged[index]
                 merged[index] = recipe
                 if oldRecipe.photoURLSmall != recipe.photoURLSmall {
-                    cacheManager.clearImageCache(for: recipe.id)
+                    await cacheManager.clearImageCache(forKey: recipe.id.uuidString)
                 }
             } else {
                 merged.append(recipe)
@@ -74,8 +63,7 @@ final class RecipeListViewModel: ObservableObject {
         return merged
     }
 
-    // MARK: - Error Handling
-    private func handleError(_ error: RecipeError) {
+    func handleError(_ error: RecipeError) {
         self.error = error
         if recipes.isEmpty {
             recipes = []

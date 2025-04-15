@@ -122,7 +122,23 @@ struct RecipeCard: View {
     }
 
     private func loadImage() async {
-        image = await CacheManager.shared.image(for: recipe, size: .small)
+        guard let url = recipe.photoURLSmall else { return }
+        image = await loadImage(from: url)
+    }
+
+    private func loadImage(from url: URL) async -> UIImage? {
+        let cacheKey = recipe.id.uuidString
+        if let cached = await CacheManager.shared.cachedImage(forKey: cacheKey) {
+            return cached
+        }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            guard let image = UIImage(data: data) else { return nil }
+            await CacheManager.shared.cacheImage(image, forKey: cacheKey)
+            return image
+        } catch {
+            return nil
+        }
     }
 }
 

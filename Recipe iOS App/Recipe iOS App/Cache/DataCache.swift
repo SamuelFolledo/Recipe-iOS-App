@@ -8,39 +8,43 @@
 import Foundation
 
 actor DataCache<T: Codable> {
-    private let cacheFile: URL
-    private let decoder = JSONDecoder()
-    private let encoder = JSONEncoder()
+    private let cacheDirectory: URL
+    private let fileManager = FileManager.default
 
-    init(filename: String) {
-        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory,
-                                                      in: .userDomainMask).first!
-        cacheFile = cacheDirectory.appendingPathComponent(filename)
-    }
-
-    func save(_ data: T) async {
-        do {
-            let data = try encoder.encode(data)
-            try data.write(to: cacheFile)
-        } catch {
-            print("Error saving cache: \(error)")
+    init(directoryName: String) {
+        let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        cacheDirectory = base.appendingPathComponent(directoryName)
+        if !fileManager.fileExists(atPath: cacheDirectory.path) {
+            try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         }
     }
 
-    func load() async -> T? {
-        guard FileManager.default.fileExists(atPath: cacheFile.path) else {
-            return nil
-        }
-        do {
-            let data = try Data(contentsOf: cacheFile)
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            print("Error loading cache: \(error)")
-            return nil
+    func save(_ value: T, forKey key: String) async {
+        let fileURL = cacheDirectory.appendingPathComponent(key)
+        if let data = value as? Data {
+            try? data.write(to: fileURL)
+        } else {
+            let encoder = JSONEncoder()
+            if let data = try? encoder.encode(value) {
+                try? data.write(to: fileURL)
+            }
         }
     }
 
-    func clear() async {
-        try? FileManager.default.removeItem(at: cacheFile)
+    func load(forKey key: String) async -> T? {
+        let fileURL = cacheDirectory.appendingPathComponent(key)
+        guard fileManager.fileExists(atPath: fileURL.path) else { return nil }
+        if T.self == Data.self, let data = try? Data(contentsOf: fileURL) {
+            return data as? T
+        } else if let data = try? Data(contentsOf: fileURL) {
+            let decoder = JSONDecoder()
+            return try? decoder.decode(T.self, from: data)
+        }
+        return nil
+    }
+
+    func clear(forKey key: String) async {
+        let fileURL = cacheDirectory.appendingPathComponent(key)
+        try? fileManager.removeItem(at: fileURL)
     }
 }
