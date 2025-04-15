@@ -141,26 +141,8 @@ struct RecipeCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
         )
-        .task { await loadImage() }
-    }
-
-    private func loadImage() async {
-        guard let url = recipe.photoURLSmall else { return }
-        image = await loadImage(from: url)
-    }
-
-    private func loadImage(from url: URL) async -> UIImage? {
-        let cacheKey = recipe.id
-        if let cached = await CacheManager.shared.cachedImage(forKey: cacheKey) {
-            return cached
-        }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            guard let image = UIImage(data: data) else { return nil }
-            await CacheManager.shared.cacheImage(image, forKey: cacheKey)
-            return image
-        } catch {
-            return nil
+        .task {
+            await image = recipe.loadImage(isLarge: true)
         }
     }
 }

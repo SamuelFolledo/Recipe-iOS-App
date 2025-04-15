@@ -5,7 +5,7 @@
 //  Created by Samuel Folledo on 4/14/25.
 //
 
-import Foundation
+import UIKit
 
 struct RecipeWrapper: Decodable {
     let recipes: [Recipe]
@@ -48,5 +48,24 @@ struct Recipe: Codable, Identifiable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         return hasher.combine(id)
+    }
+}
+
+extension Recipe {
+    func loadImage(isLarge: Bool) async -> UIImage? {
+        guard let url = isLarge ? photoURLLarge : photoURLSmall else {
+            return nil
+        }
+        if let cached = await CacheManager.shared.cachedImage(forKey: id) {
+            return cached
+        }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            guard let image = UIImage(data: data) else { return nil }
+            await CacheManager.shared.cacheImage(image, forKey: id)
+            return image
+        } catch {
+            return nil
+        }
     }
 }
