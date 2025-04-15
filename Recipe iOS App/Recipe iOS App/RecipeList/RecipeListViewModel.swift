@@ -12,6 +12,7 @@ final class RecipeListViewModel: ObservableObject {
     @Published private(set) var recipes: [Recipe] = []
     @Published private(set) var isLoading = false
     @Published private(set) var error: RecipeError?
+    @Published var selectedRecipe: Recipe?
 
     private let recipeService: RecipeServiceProtocol
     private let cacheManager: CacheManagerProtocol
@@ -54,7 +55,7 @@ private extension RecipeListViewModel {
                 let oldRecipe = merged[index]
                 merged[index] = recipe
                 if oldRecipe.photoURLSmall != recipe.photoURLSmall {
-                    await cacheManager.clearImageCache(forKey: recipe.id.uuidString)
+                    await cacheManager.clearImageCache(forKey: recipe.id)
                 }
             } else {
                 merged.append(recipe)

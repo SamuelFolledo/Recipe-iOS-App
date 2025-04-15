@@ -8,17 +8,14 @@
 import SwiftUI
 
 struct RecipeDetailView: View {
-    @StateObject var vm: RecipeDetailViewModel
+    let recipe: Recipe
 
     var body: some View {
-
-    }
-
-    @ViewBuilder var sampleView: some View {
-
+        Text(recipe.name)
+            .font(.largeTitle)
     }
 }
 
 #Preview {
-    RecipeDetailView(vm: RecipeDetailViewModel(recipe: fakeRecipe))
+    RecipeDetailView(recipe: fakeRecipe)
 }

@@ -12,62 +12,89 @@ struct RecipeListView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var gridColumns: [GridItem] {
-        if sizeClass == .regular {
-            // iPad layout
-            return [GridItem(.adaptive(minimum: 300), spacing: 16)]
-        } else {
-            // iPhone layout
-            return [GridItem(.flexible())]
-        }
+        sizeClass == .regular ?
+        [GridItem(.adaptive(minimum: 300), spacing: 16)] :
+        [GridItem(.flexible(), spacing: 16)]
     }
 
     var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.recipes.isEmpty {
-                LoadingView()
-            } else if let error = viewModel.error {
-                ErrorView(error: error, retryAction: reload)
-            } else if viewModel.recipes.isEmpty {
-                EmptyStateView()
+            if sizeClass == .regular {
+                NavigationSplitView(columnVisibility: .constant(.doubleColumn)) {
+                    listContent
+                } detail: {
+                    detailContent
+                }
+                .navigationSplitViewStyle(.balanced)
             } else {
-                recipesView
+                listContent
             }
         }
         .navigationTitle("Recipes")
-        .task {
-            loadInitialData()
-        }
-        .refreshable {
-            reload()
-        }
+        .task { await viewModel.loadRecipes() }
+        .refreshable { await viewModel.loadRecipes() }
     }
 
-    // MARK: - Subviews
-    private var recipesView: some View {
-        ScrollView {
-            LazyVGrid(columns: gridColumns, spacing: 16) {
-                ForEach(viewModel.recipes) { recipe in
-                    NavigationLink {
-                        RecipeDetailView(vm: RecipeDetailViewModel(recipe: recipe))
-                    } label: {
-                        RecipeCard(recipe: recipe)
+    @ViewBuilder private var listContent: some View {
+        Group {
+            if viewModel.isLoading && viewModel.recipes.isEmpty {
+                LoadingView()
+            } else if let error = viewModel.error {
+                ErrorView(error: error, retryAction: {
+                    Task { await viewModel.loadRecipes() }
+                })
+            } else if viewModel.recipes.isEmpty {
+                EmptyStateView()
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: gridColumns, spacing: 16) {
+                        ForEach(viewModel.recipes) { recipe in
+                            Button {
+                                viewModel.selectedRecipe = recipe
+                            } label: {
+                                recipeItem(recipe)
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
+                    .padding(8)
+                    .navigationDestination(for: Recipe.self) { selectedRecipe in
+                        RecipeDetailView(recipe: selectedRecipe)
+                    }
                 }
             }
-            .padding()
         }
     }
 
-    // MARK: - Actions
-    private func loadInitialData() {
-        Task { await viewModel.loadRecipes() }
+    @ViewBuilder func recipeItem(_ recipe: Recipe) -> some View {
+        let isSelected = viewModel.selectedRecipe?.id == recipe.id
+        Group {
+            if sizeClass == .regular {
+                RecipeCard(recipe: recipe, isSelected: isSelected)
+            } else {
+                RecipeCard(recipe: recipe, isSelected: isSelected)
+                    .sheet(item: $viewModel.selectedRecipe) { recipe in
+                        RecipeDetailView(recipe: recipe)
+                    }
+            }
+        }
+        .background {
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
+        }
+        .contentShape(Rectangle())
     }
 
-    private func reload() {
-        Task { await viewModel.loadRecipes() }
+    @ViewBuilder private var detailContent: some View {
+        if let recipe = viewModel.selectedRecipe {
+            RecipeDetailView(recipe: recipe)
+        } else {
+            Text("Select a recipe")
+                .foregroundColor(.secondary)
+                .font(.title2)
+        }
     }
 }
+
 
 // MARK: - Preview
 #Preview {
@@ -80,45 +107,41 @@ struct RecipeListView: View {
 // MARK: - Subviews
 struct RecipeCard: View {
     let recipe: Recipe
+    var isSelected: Bool = false
     @State private var image: UIImage?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            imageSection
-            textSection
+            ZStack {
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Color(.secondarySystemBackground)
+                        .overlay(ProgressView())
+                }
+            }
+            .frame(height: 150)
+            .clipped()
+            VStack(alignment: .leading, spacing: 4) {
+                Text(recipe.name)
+                    .font(.headline)
+                    .lineLimit(1)
+                Text(recipe.cuisine)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(8)
         }
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(radius: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
+        )
         .task { await loadImage() }
-    }
-
-    private var imageSection: some View {
-        ZStack {
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Color(.secondarySystemBackground)
-                    .overlay(ProgressView())
-            }
-        }
-        .frame(height: 150)
-        .clipped()
-    }
-
-    private var textSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(recipe.name)
-                .font(.headline)
-                .lineLimit(1)
-
-            Text(recipe.cuisine)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding(8)
     }
 
     private func loadImage() async {
@@ -127,7 +150,7 @@ struct RecipeCard: View {
     }
 
     private func loadImage(from url: URL) async -> UIImage? {
-        let cacheKey = recipe.id.uuidString
+        let cacheKey = recipe.id
         if let cached = await CacheManager.shared.cachedImage(forKey: cacheKey) {
             return cached
         }
@@ -141,6 +164,7 @@ struct RecipeCard: View {
         }
     }
 }
+
 
 struct LoadingView: View {
     var body: some View {
