@@ -18,22 +18,18 @@ struct RecipeListView: View {
     }
 
     var body: some View {
-        Group {
-            if sizeClass == .regular {
-                NavigationSplitView(columnVisibility: .constant(.doubleColumn)) {
-                    listContent
-                } detail: {
-                    detailContent
-                }
-                .navigationSplitViewStyle(.balanced)
-            } else {
-                NavigationStack {
-                    listContent
-                }
+        if sizeClass == .regular {
+            NavigationSplitView(columnVisibility: .constant(.doubleColumn)) {
+                listContent
+            } detail: {
+                detailContent
+            }
+            .navigationSplitViewStyle(.balanced)
+        } else {
+            NavigationStack {
+                listContent
             }
         }
-        .task { await viewModel.loadRecipes() }
-        .refreshable { await viewModel.loadRecipes() }
     }
 
     @ViewBuilder private var listContent: some View {
@@ -63,6 +59,8 @@ struct RecipeListView: View {
                 settingsButton
             }
         }
+        .task { await viewModel.loadRecipes() }
+        .refreshable { await viewModel.loadRecipes() }
     }
 
     @ViewBuilder func recipeItem(_ recipe: Recipe) -> some View {
