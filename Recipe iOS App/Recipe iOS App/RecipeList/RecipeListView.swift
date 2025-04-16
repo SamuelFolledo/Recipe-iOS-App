@@ -27,10 +27,11 @@ struct RecipeListView: View {
                 }
                 .navigationSplitViewStyle(.balanced)
             } else {
-                listContent
+                NavigationStack {
+                    listContent
+                }
             }
         }
-        .navigationTitle("Recipes")
         .task { await viewModel.loadRecipes() }
         .refreshable { await viewModel.loadRecipes() }
     }
@@ -57,12 +58,10 @@ struct RecipeListView: View {
                         }
                     }
                     .padding(8)
-                    .navigationDestination(for: Recipe.self) { selectedRecipe in
-                        RecipeDetailView(recipe: selectedRecipe)
-                    }
                 }
             }
         }
+        .navigationTitle("Recipes")
     }
 
     @ViewBuilder func recipeItem(_ recipe: Recipe) -> some View {

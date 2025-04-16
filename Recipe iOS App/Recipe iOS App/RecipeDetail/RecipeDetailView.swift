@@ -20,12 +20,14 @@ struct RecipeDetailView: View {
                 imageSection
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(recipe.name)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                    if sizeClass == .compact {
+                        Text(recipe.name)
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                    }
 
                     Text(recipe.cuisine)
-                        .font(.title2)
+                        .font(.headline)
                         .foregroundColor(.secondary)
                 }
 
@@ -35,6 +37,11 @@ struct RecipeDetailView: View {
         }
         .navigationTitle(recipe.name)
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: recipe) { _, newValue in
+            Task {
+                await image = newValue.loadImage(isLarge: true)
+            }
+        }
         .task {
             await image = recipe.loadImage(isLarge: true)
         }

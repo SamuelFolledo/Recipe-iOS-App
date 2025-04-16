@@ -21,7 +21,7 @@ class RecipeService {
 
 extension RecipeService: RecipeServiceProtocol {
     func fetchRecipes() async throws -> [Recipe] {
-        guard let request = Endpoint.allRecipes else {
+        guard let request = Endpoint.allRecipes.urlRequest else {
             throw APIError.invalidURL
         }
         let wrapper: RecipeWrapper = try await networkService.fetch(request)
