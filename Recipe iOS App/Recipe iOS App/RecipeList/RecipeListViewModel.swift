@@ -14,7 +14,6 @@ final class RecipeListViewModel: ObservableObject {
     @Published private(set) var error: RecipeError?
     @Published var selectedRecipe: Recipe?
     @Published var selectedEndpoint: Endpoint = .allRecipes
-    @Published var showSettings = false
 
     private let recipeService: RecipeServiceProtocol
     private let cacheManager: CacheManagerProtocol

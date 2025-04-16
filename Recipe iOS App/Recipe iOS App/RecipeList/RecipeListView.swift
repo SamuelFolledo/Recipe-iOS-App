@@ -102,20 +102,16 @@ struct RecipeListView: View {
     }
 
     @ViewBuilder private var settingsButton: some View {
-        Button {
-            viewModel.showSettings = true
-        } label: {
-            Picker("", selection: $viewModel.selectedEndpoint, content: {
-                Section("Selected Endpoint") {
-                    ForEach(Endpoint.allCases, id: \.self) { endpoint in
-                        Text(endpoint.title)
-                            .tag(endpoint)
-                    }
+        Picker("", selection: $viewModel.selectedEndpoint, content: {
+            Section("Selected Endpoint") {
+                ForEach(Endpoint.allCases, id: \.self) { endpoint in
+                    Text(endpoint.title)
+                        .tag(endpoint)
                 }
-            }, currentValueLabel: {
-                Image(systemName: "gearshape")
-            })
-        }
+            }
+        }, currentValueLabel: {
+            Image(systemName: "gearshape")
+        })
         .onChange(of: viewModel.selectedEndpoint) { _, _ in
             viewModel.endpointChangedHandler()
         }
