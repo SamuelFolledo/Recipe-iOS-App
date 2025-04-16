@@ -26,6 +26,14 @@ enum Endpoint: CaseIterable {
         }
     }
 
+    var navigationTitle: String {
+        switch self {
+        case .allRecipes: "Recipes"
+        case .malformed: "Malformed"
+        case .empty: "Empty"
+        }
+    }
+
     var urlRequest: URLRequest? {
         URL(string: urlString).map {
             URLRequest(url: $0)

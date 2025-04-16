@@ -57,7 +57,7 @@ struct RecipeListView: View {
                 }
             }
         }
-        .navigationTitle("Recipes")
+        .navigationTitle(viewModel.selectedEndpoint.navigationTitle)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 settingsButton
@@ -154,6 +154,8 @@ struct RecipeCard: View {
                 Text(recipe.displayName)
                     .font(.headline)
                     .lineLimit(1)
+                    .foregroundColor(.primary)
+
                 Text(recipe.cuisine)
                     .font(.subheadline)
                     .foregroundColor(.secondary)

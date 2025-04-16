@@ -24,6 +24,7 @@ struct RecipeDetailView: View {
                         Text(recipe.displayName)
                             .font(.largeTitle)
                             .fontWeight(.bold)
+                            .foregroundColor(.primary)
                     }
 
                     Text(recipe.cuisine)
