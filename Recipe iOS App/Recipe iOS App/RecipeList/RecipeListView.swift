@@ -135,7 +135,7 @@ struct RecipeCard: View {
         }
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(radius: 4)
+        .shadow(color: .gray.opacity(0.7), radius: 4)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
