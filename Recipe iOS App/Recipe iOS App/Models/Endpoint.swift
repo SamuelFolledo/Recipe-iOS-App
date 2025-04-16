@@ -31,6 +31,14 @@ enum Endpoint: CaseIterable {
             URLRequest(url: $0)
         }
     }
+
+    var cacheKey: String {
+        switch self {
+        case .allRecipes: "allRecipes"
+        case .malformed: "malformed"
+        case .empty: "empty"
+        }
+    }
 }
 
 enum ImageSize {

@@ -13,15 +13,18 @@ struct RecipeWrapper: Decodable {
 
 struct Recipe: Codable, Identifiable, Hashable {
     let id: String
-    let name: String
+    let name: String?
     let cuisine: String
     let photoURLSmall: URL?
     let photoURLLarge: URL?
     let sourceURL: URL?
     let youtubeURL: URL?
 
+    var displayName: String {
+        name ?? "Untitled Recipe"
+    }
     var isValid: Bool {
-        !name.isEmpty && !cuisine.isEmpty
+        !(name ?? "").isEmpty && !cuisine.isEmpty && !id.isEmpty
     }
 
     init(id: String, name: String, cuisine: String, photoURLSmall: URL?, photoURLLarge: URL?, sourceURL: URL?, youtubeURL: URL?) {

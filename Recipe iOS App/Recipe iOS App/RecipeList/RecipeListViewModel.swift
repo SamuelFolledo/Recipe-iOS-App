@@ -13,6 +13,8 @@ final class RecipeListViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var error: RecipeError?
     @Published var selectedRecipe: Recipe?
+    @Published var selectedEndpoint: Endpoint = .allRecipes
+    @Published var showSettings = false
 
     private let recipeService: RecipeServiceProtocol
     private let cacheManager: CacheManagerProtocol
@@ -22,15 +24,22 @@ final class RecipeListViewModel: ObservableObject {
         self.cacheManager = cacheManager
     }
 
+    func endpointChangedHandler() {
+        recipes.removeAll()
+        Task {
+            await loadRecipes()
+        }
+    }
+
     func loadRecipes() async {
         error = nil
         isLoading = true
         do {
             await loadCachedRecipes()
-            let newRecipes = try await recipeService.fetchRecipes()
+            let newRecipes = try await recipeService.fetchRecipes(selectedEndpoint)
             let mergedRecipes = await mergeRecipes(newRecipes)
             recipes = mergedRecipes
-            await cacheManager.cacheRecipes(mergedRecipes)
+            await cacheManager.cacheRecipes(mergedRecipes, to: selectedEndpoint)
         } catch let error as RecipeError {
             handleError(error)
         } catch {
@@ -42,7 +51,7 @@ final class RecipeListViewModel: ObservableObject {
 
 private extension RecipeListViewModel {
     func loadCachedRecipes() async {
-        let cached = await cacheManager.loadCachedRecipes()
+        let cached = await cacheManager.loadCachedRecipes(from: selectedEndpoint)
         if !cached.isEmpty {
             recipes = cached
         }

@@ -50,11 +50,7 @@ struct RecipeListView: View {
                 ScrollView {
                     LazyVGrid(columns: gridColumns, spacing: 16) {
                         ForEach(viewModel.recipes) { recipe in
-                            Button {
-                                viewModel.selectedRecipe = recipe
-                            } label: {
-                                recipeItem(recipe)
-                            }
+                            recipeItem(recipe)
                         }
                     }
                     .padding(8)
@@ -62,25 +58,37 @@ struct RecipeListView: View {
             }
         }
         .navigationTitle("Recipes")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                settingsButton
+            }
+        }
     }
 
     @ViewBuilder func recipeItem(_ recipe: Recipe) -> some View {
         let isSelected = viewModel.selectedRecipe?.id == recipe.id
-        Group {
-            if sizeClass == .regular {
+        Button {
+            viewModel.selectedRecipe = recipe
+        } label: {
+            switch sizeClass {
+            case .regular:
                 RecipeCard(recipe: recipe, isSelected: isSelected)
-            } else {
+                    .background {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
+                    }
+            case .compact:
                 RecipeCard(recipe: recipe, isSelected: isSelected)
                     .sheet(item: $viewModel.selectedRecipe) { recipe in
                         RecipeDetailView(recipe: recipe)
                     }
+            default:
+                EmptyView()
             }
         }
-        .background {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
-        }
         .contentShape(Rectangle())
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 
     @ViewBuilder private var detailContent: some View {
@@ -92,14 +100,32 @@ struct RecipeListView: View {
                 .font(.title2)
         }
     }
+
+    @ViewBuilder private var settingsButton: some View {
+        Button {
+            viewModel.showSettings = true
+        } label: {
+            Picker("", selection: $viewModel.selectedEndpoint, content: {
+                Section("Selected Endpoint") {
+                    ForEach(Endpoint.allCases, id: \.self) { endpoint in
+                        Text(endpoint.title)
+                            .tag(endpoint)
+                    }
+                }
+            }, currentValueLabel: {
+                Image(systemName: "gearshape")
+            })
+        }
+        .onChange(of: viewModel.selectedEndpoint) { _, _ in
+            viewModel.endpointChangedHandler()
+        }
+    }
 }
 
 
 // MARK: - Preview
 #Preview {
-    NavigationStack {
-        RecipeListView()
-    }
+    RecipeListView()
 }
 
 
@@ -123,8 +149,9 @@ struct RecipeCard: View {
             }
             .frame(height: 150)
             .clipped()
+
             VStack(alignment: .leading, spacing: 4) {
-                Text(recipe.name)
+                Text(recipe.displayName)
                     .font(.headline)
                     .lineLimit(1)
                 Text(recipe.cuisine)

@@ -8,8 +8,8 @@
 import UIKit
 
 protocol CacheManagerProtocol {
-    func cacheRecipes(_ recipes: [Recipe]) async
-    func loadCachedRecipes() async -> [Recipe]
+    func cacheRecipes(_ recipes: [Recipe], to endpoint: Endpoint) async
+    func loadCachedRecipes(from endpoint: Endpoint) async -> [Recipe]
 
     func cacheImage(_ image: UIImage, forKey key: String) async
     func cachedImage(forKey key: String) async -> UIImage?
@@ -27,12 +27,12 @@ final class CacheManager: CacheManagerProtocol {
 
 // MARK: - Recipe Caching Methods
 extension CacheManager {
-    func cacheRecipes(_ recipes: [Recipe]) async {
-        await recipeCache.save(recipes, forKey: allRecipesCacheKey)
+    func cacheRecipes(_ recipes: [Recipe], to endpoint: Endpoint) async {
+        await recipeCache.save(recipes, forKey: endpoint.cacheKey)
     }
 
-    func loadCachedRecipes() async -> [Recipe] {
-        await recipeCache.load(forKey: allRecipesCacheKey) ?? []
+    func loadCachedRecipes(from endpoint: Endpoint) async -> [Recipe] {
+        await recipeCache.load(forKey: endpoint.cacheKey) ?? []
     }
 }
 

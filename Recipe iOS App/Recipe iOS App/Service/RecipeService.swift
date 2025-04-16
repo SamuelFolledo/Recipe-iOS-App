@@ -8,7 +8,7 @@
 import Foundation
 
 protocol RecipeServiceProtocol {
-    func fetchRecipes() async throws -> [Recipe]
+    func fetchRecipes(_ endpoint: Endpoint) async throws -> [Recipe]
 }
 
 class RecipeService {
@@ -20,15 +20,11 @@ class RecipeService {
 }
 
 extension RecipeService: RecipeServiceProtocol {
-    func fetchRecipes() async throws -> [Recipe] {
-        guard let request = Endpoint.allRecipes.urlRequest else {
+    func fetchRecipes(_ endpoint: Endpoint) async throws -> [Recipe] {
+        guard let request = endpoint.urlRequest else {
             throw APIError.invalidURL
         }
         let wrapper: RecipeWrapper = try await networkService.fetch(request)
-        // Validate all recipes
-        guard wrapper.recipes.allSatisfy(\.isValid) else {
-            throw APIError.invalidResponse
-        }
-        return wrapper.recipes
+        return wrapper.recipes.filter { $0.isValid }
     }
 }

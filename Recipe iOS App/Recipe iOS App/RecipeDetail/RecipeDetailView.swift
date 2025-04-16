@@ -21,7 +21,7 @@ struct RecipeDetailView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     if sizeClass == .compact {
-                        Text(recipe.name)
+                        Text(recipe.displayName)
                             .font(.largeTitle)
                             .fontWeight(.bold)
                     }
@@ -35,7 +35,7 @@ struct RecipeDetailView: View {
             }
             .padding()
         }
-        .navigationTitle(recipe.name)
+        .navigationTitle(recipe.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: recipe) { _, newValue in
             Task {
@@ -100,7 +100,5 @@ struct RecipeDetailView: View {
 }
 
 #Preview {
-    NavigationStack {
-        RecipeDetailView(recipe: fakeRecipe)
-    }
+    RecipeDetailView(recipe: fakeRecipe)
 }
