@@ -17,8 +17,8 @@ final class RecipeListViewModel: ObservableObject {
     @Published private(set) var error: RecipeError?
     @Published var selectedRecipe: Recipe?
     @Published var selectedEndpoint: Endpoint = .allRecipes
-    @Published private var searchText: String = ""
-    @Published private var sort: RecipeSort = .nameAsc
+    @Published var searchText: String = ""
+    @Published var sort: RecipeSort = .nameAsc
 
     var sectionKey: (Recipe) -> String {
         switch sort {

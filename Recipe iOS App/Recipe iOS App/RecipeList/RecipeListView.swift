@@ -120,7 +120,13 @@ struct RecipeListView: View {
                         viewModel.selectedEndpoint = endpoint
                         viewModel.endpointChangedHandler()
                     } label: {
-                        Label(endpoint.title, systemImage: viewModel.selectedEndpoint == endpoint ? "checkmark" : "")
+                        HStack {
+                            Text(endpoint.title)
+
+                            if viewModel.selectedEndpoint == endpoint {
+                                Image(systemName: "checkmark")
+                            }
+                        }
                     }
                 }
             }
@@ -130,7 +136,13 @@ struct RecipeListView: View {
                     Button {
                         viewModel.sort = sortOption
                     } label: {
-                        Label(viewModel.sortOption.rawValue, systemImage: viewModel.sort == sortOption ? "checkmark" : "")
+                        HStack {
+                            Text(sortOption.rawValue)
+
+                            if viewModel.sort == sortOption {
+                                Image(systemName: "checkmark")
+                            }
+                        }
                     }
                 }
             }
