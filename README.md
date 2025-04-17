@@ -1,10 +1,7 @@
 # Recipe-iOS-App
 
 ### Summary: Include screen shots or a video of your app highlighting its features
-## Live Demo
-  **Full Demo**  |  **Other Features**    
-:-------------------------:|:--------------------:|
-  <img src="https://github.com/SamuelFolledo/Recipe-iOS-App/blob/main/static%20files/demos/Recipe%20Demo.gif" width="400">  |  <img src="https://github.com/SamuelFolledo/NewsApp/blob/master/static/gif/newsAppListDemo.gif" width="400" height="800">  
+<img src="https://github.com/SamuelFolledo/Recipe-iOS-App/blob/main/static%20files/demos/Recipe%20Demo.gif">
 
 
 ### Focus Areas: What specific areas of the project did you prioritize? Why did you choose to focus on these areas?
