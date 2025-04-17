@@ -44,13 +44,26 @@ struct RecipeListView: View {
                 EmptyStateView()
             } else {
                 ScrollView {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(viewModel.recipes) { recipe in
-                            recipeItem(recipe)
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        ForEach(viewModel.sectionedFilteredAndSortedRecipes, id: \.key) { section in
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(section.key)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .padding(.leading, 8)
+                                    .padding(.top, 8)
+
+                                LazyVGrid(columns: gridColumns, spacing: 16) {
+                                    ForEach(section.value) { recipe in
+                                        recipeItem(recipe)
+                                    }
+                                }
+                            }
                         }
                     }
                     .padding(8)
                 }
+                .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search recipes")
             }
         }
         .navigationTitle(viewModel.selectedEndpoint.navigationTitle)
@@ -100,18 +113,31 @@ struct RecipeListView: View {
     }
 
     @ViewBuilder private var settingsButton: some View {
-        Picker("", selection: $viewModel.selectedEndpoint, content: {
-            Section("Selected Endpoint") {
+        Menu {
+            Section(header: Text("Endpoint")) {
                 ForEach(Endpoint.allCases, id: \.self) { endpoint in
-                    Text(endpoint.title)
-                        .tag(endpoint)
+                    Button {
+                        viewModel.selectedEndpoint = endpoint
+                        viewModel.endpointChangedHandler()
+                    } label: {
+                        Label(endpoint.title, systemImage: viewModel.selectedEndpoint == endpoint ? "checkmark" : "")
+                    }
                 }
             }
-        }, currentValueLabel: {
+
+            Section(header: Text("Sort By")) {
+                ForEach(RecipeSort.allCases) { sortOption in
+                    Button {
+                        viewModel.sort = sortOption
+                    } label: {
+                        Label(viewModel.sortOption.rawValue, systemImage: viewModel.sort == sortOption ? "checkmark" : "")
+                    }
+                }
+            }
+        } label: {
             Image(systemName: "gearshape")
-        })
-        .onChange(of: viewModel.selectedEndpoint) { _, _ in
-            viewModel.endpointChangedHandler()
+                .imageScale(.large)
+                .accessibilityLabel("Settings")
         }
     }
 }

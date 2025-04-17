@@ -9,14 +9,58 @@ import SwiftUI
 
 @MainActor
 final class RecipeListViewModel: ObservableObject {
+    private let recipeService: RecipeServiceProtocol
+    private let cacheManager: CacheManagerProtocol
+
     @Published private(set) var recipes: [Recipe] = []
     @Published private(set) var isLoading = false
     @Published private(set) var error: RecipeError?
     @Published var selectedRecipe: Recipe?
     @Published var selectedEndpoint: Endpoint = .allRecipes
+    @Published private var searchText: String = ""
+    @Published private var sort: RecipeSort = .nameAsc
 
-    private let recipeService: RecipeServiceProtocol
-    private let cacheManager: CacheManagerProtocol
+    var sectionKey: (Recipe) -> String {
+        switch sort {
+        case .nameAsc, .nameDesc:
+            return { recipe in
+                recipe.displayName.first.map { String($0).uppercased() } ?? "#"
+            }
+        case .cuisineAsc, .cuisineDesc:
+            return { recipe in recipe.cuisine }
+        }
+    }
+    var filteredAndSortedRecipes: [Recipe] {
+        let filtered = searchText.isEmpty
+        ? recipes
+        : recipes.filter {
+            $0.displayName.localizedCaseInsensitiveContains(searchText)
+            || $0.cuisine.localizedCaseInsensitiveContains(searchText)
+        }
+        switch sort {
+        case .nameAsc:
+            return filtered.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+        case .nameDesc:
+            return filtered.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedDescending }
+        case .cuisineAsc:
+            return filtered.sorted { $0.cuisine.localizedCaseInsensitiveCompare($1.cuisine) == .orderedAscending }
+        case .cuisineDesc:
+            return filtered.sorted { $0.cuisine.localizedCaseInsensitiveCompare($1.cuisine) == .orderedDescending }
+        }
+    }
+    var sectionedFilteredAndSortedRecipes: [(key: String, value: [Recipe])] {
+        let grouped = Dictionary(grouping: filteredAndSortedRecipes, by: sectionKey)
+        switch sort {
+        case .nameAsc:
+            return grouped.sorted { $0.key.localizedCompare($1.key) == .orderedAscending }
+        case .nameDesc:
+            return grouped.sorted { $0.key.localizedCompare($1.key) == .orderedDescending }
+        case .cuisineAsc:
+            return grouped.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+        case .cuisineDesc:
+            return grouped.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedDescending }
+        }
+    }
 
     init(recipeService: RecipeServiceProtocol = RecipeService(), cacheManager: CacheManagerProtocol = CacheManager.shared) {
         self.recipeService = recipeService
