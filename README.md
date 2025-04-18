@@ -3,6 +3,14 @@
 ### Summary: Include screen shots or a video of your app highlighting its features
 <img src="https://github.com/SamuelFolledo/Recipe-iOS-App/blob/main/static%20files/demos/Recipe%20Demo.gif">
 
+##### Features
+- Shows recipe list and its details side by side on landscape mode, and shows recipe list or details as a sheet on portrait mode
+- Caches seen recipes and images when loaded using a generic `DataCache` and `CacheManager` to manage cached recipes and images  
+- Fetch/cache recipe's small images on list when item is shown and fetch/cache large image when showing recipe's details
+- Show cached recipes when there is no internet, and merge recipe data when internet is available
+- Search and/or sort recipes by name or cuisine
+- Change endpoints and sort by using settings button
+
 
 ### Focus Areas: What specific areas of the project did you prioritize? Why did you choose to focus on these areas?
 - **Generic caching system for seen images and recipes using DataCache**: To optimize performance and reduce network usage, I implemented a reusable disk cache for images and recipe data.
